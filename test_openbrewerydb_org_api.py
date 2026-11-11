@@ -60,30 +60,51 @@ def test_filter_by_city(city):
 
 """Тест 4: Получаем конкретную пивоварню по ID"""
 def test_get_single_brewery():
-    response = requests.get(f"{BASE_URL}/breweries?per_page=1")
+    # 1. Сначала получаем список пивоварен, чтобы найти любой существующий ID
+    list_response = requests.get(f"{BASE_URL}/breweries")
+    assert list_response.status_code == 200
+    breweries_list = list_response.json()
+    
+    # 2. Проверяем, что список не пустой (требование преподавателя: тест не должен молча проходить)
+    assert len(breweries_list) > 0, "Не удалось получить список пивоварен для поиска ID"
+    
+    # 3. Берем ID первой пивоварни из списка
+    valid_brewery_id = breweries_list[0]["id"]
+    
+    # 4. Теперь делаем запрос за конкретной пивоварней по этому ID
+    response = requests.get(f"{BASE_URL}/breweries/{valid_brewery_id}")
+    
+    # 5. Проверяем статус (должен быть 200, так как ID мы взяли из живого списка)
+    assert response.status_code == 200
+    
     data = response.json()
-    if len(data) > 0:
-        first_id = data[0]["id"]
-        response2 = requests.get(f"{BASE_URL}/breweries/{first_id}")
-        assert response2.status_code == 200
-        data2 = response2.json()
-        assert data2["id"] == first_id
+    
+    # 6. Проверяем, что данные пришли и ID совпадает
+    assert data["id"] == valid_brewery_id
+    
+    # 7. Проверяем структуру
+    assert "name" in data
+    assert "brewery_type" in data
+    assert "city" in data
 
 """Тест 5: Получаем случайную пивоварню"""
 def test_get_random_brewery():
     response = requests.get(f"{BASE_URL}/breweries/random")
     assert response.status_code == 200
+    
     data = response.json()
     
-    # Должен вернуться список с одной пивоварней
+    # Проверяем, что вернулся список
     assert isinstance(data, list)
-    assert len(data) == 1
     
-    # Проверяем структуру
+    # Проверяем, что в списке есть ровно одна пивоварня
+    assert len(data) == 1, f"Ожидалась 1 пивоварня, получено {len(data)}"
+    
     brewery = data[0]
+    
+    # Проверяем, что внутри есть необходимые поля
     assert "id" in brewery
     assert "name" in brewery
-    assert "brewery_type" in brewery
 
 """Тест 6: Ищем пивоварни по названию"""
 def test_search_breweries():

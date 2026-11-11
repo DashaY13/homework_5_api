@@ -94,13 +94,14 @@ def test_update_post():
 
 """Тест 6: Удаляем пост"""
 def test_delete_post():
+    # Удаляем пост с id=1
     response = requests.delete(f"{BASE_URL}/posts/1")
     
-    # При удалении возвращается пустой ответ со статусом 200
+   # Проверяем, что удаление прошло успешно
     assert response.status_code == 200
     
-    # Проверяем, что пост действительно удален
-    check_response = requests.get(f"{BASE_URL}/posts/1")
+    # Проверяем, что сервер вернул пустой ответ на операцию удаления
+    assert response.json() == {}
 
 
 """Тест 7: Пытаемся получить несуществующий пост"""
